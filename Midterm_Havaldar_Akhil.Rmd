@@ -1,0 +1,124 @@
+---
+title: "Midterm: Opioid Epidemic in America"
+author: "Akhil Havaldar (ash2sfp)"
+date: "Date: February 21"
+output:
+  html_document:
+    number_sections: yes
+    toc: yes
+    toc_float: yes
+    code_folding: hide
+  pdf_document:
+    toc: yes
+---
+<style>
+h1.title {
+  font-size: 30px;
+}
+h1 {
+  font-size: 26px;
+}
+h2 {
+  font-size: 22px;
+}
+h3 { 
+  font-size: 18px;
+}
+
+</style>
+
+# Article
+[Link](https://www.theguardian.com/us-news/2022/feb/08/us-opioids-crisis-congress-government-report)
+
+- This article talks about the opioid epidemic and the deaths it has caused starting all the way back in 1999. The article also mentions how the social and psychological impact of drug overdoses are at an all time high, and is something that costs the US economy trillions of dollars. What caught my eye was that drugs are becoming cheaper and cheaper to manufacture and sell, due to the synthetic nature of these new drugs. Because the drugs are synthetic, the potency and the subsequent fatality rates are much higher than non-synthetic versions. What is alarming is that these synthetic versions are sweeping the US, because they are cheaper to produce, but also because social media platforms are making it easier for drug dealers to make contact with many potential buyers. After reading this article, I decided to find a data set that explored the opioid deaths in America and supported the argument of the article that opioid deaths are increasing drastically, and affecting certain proportions of the population more severely. By exploring the data I hope to validate this argument, and find trends that could possibly be a cause for the opioid epidemic.  
+
+# Data Description
+[Link](https://www.kaggle.com/ryanandreweckberg/opioid-crisis-by-interpersonal-relationships)
+
+- This data set matches well with my article as it looks at opioid related deaths from 1890 counties all over the country. The data was collected from a variety of surveys (BEA, Census.gov), and through CDC drug death statistics. The data has over 1 million observations of drug related deaths from 2011-2017. The important variables the data contains and that I will use are: the state in which the death occurred, the type of drug used at death, the average household income of the state at the time of death, and the unemployment rate. I will only be using the year 2017 as the data set is extremely large, and 2017 is the most recent year in the data set. I am choosing these variables because from these variables we can see what kinds of people in each state die from drug use. For example, are the majority of deaths from an impoverish area in rural America which had a lower unemployment average than the national average? Or were they a high income earner in a high unemployment rate area like California? By graphing these variables, we can start to see the bigger picture of the drug deaths. 
+
+# Data Cleaning and Validation{.tabset}
+## Initial Cleaning
+- The first step to take is retrieving only the observations from 2017, and the variables of interest. In addition, I will be removing all the NA's from the dataset to make it easier to work with. 
+```{r, warning=FALSE, message=FALSE}
+library(readr) 
+data <- read_csv("opioid.csv")
+# Taking only the 2017 observations and variables of interest
+library(dplyr)
+data <- data %>%
+  filter(Year == "2017") %>%
+  select(State, Year, Type, Income, Unemployment)
+  
+# Replacing state names with abbreviations
+data$State <- state.abb[match(data$State,state.name)]
+# Omitting all NA's (still leaves 113,040 observations)
+data <- na.omit(data)
+```
+## Unique Values- State 
+- Now we can look at the unique values for each variable.
+```{r}
+unique(data$State)
+```
+## Unique Values - Type
+- Now we can look at the unique values for each variable.
+```{r}
+unique(data$Type)
+```
+## Final Dataset
+```{r, warning=FALSE, message=FALSE}
+library(DT)
+datatable(data)
+```
+## Descriptive Statistics
+- We can look at the summary statistics for income and unemployment.
+```{r}
+summary(data$Income)
+summary(data$Unemployment)
+```
+
+# Plots
+## Income {.tabset}
+### Histogram of Income
+```{r, warning= FALSE, message=FALSE}
+library(ggplot2)
+ggplot(data) + geom_histogram(aes(x = Income), bins = 25, fill = 'orange')+labs(x = 'Income', y = 'Frequency', title = 'Histogram of Income')+  theme(plot.title=element_text(hjust=0.5))
+```
+
+### Kernel Density Plot of Income
+```{r}
+ggplot(data) + geom_density(aes(x = Income), col='orange') + theme_minimal()+ labs(x = 'Income', y = 'Density', title = 'Density Estimate of Income')+theme(plot.title=element_text(hjust=0.5))
+```
+
+### Analysis
+- The histogram and density plot tell the same story, just in a different visual way. From the two plots we can see that the opioid epidemic is disproportionately affecting lower to middle income citizens as opposed to wealthier individuals. There could be many reasons for this. One could be the over prescription of methadone and the targeting of this drug to these populations by big pharma companies, who profit from opioid addiction. Another could be that these people who earn less income are less educated, and turn to drugs which are becoming increasingly accessible on the streets. These graphs support the article's argument that the opioid epidemic is disproportionately impacting parts of the community.  
+
+## Unemployment vs. Income{.tabset}
+### Scatterplot
+```{r}
+ggplot(data, aes(x=Unemployment, y=Income))+
+ geom_point(color='blue')+
+  labs(x = 'Unemployment', y = 'Income', 
+       title = 'Unemployment vs. Income') +
+   theme(plot.title=element_text(hjust=0.5))
+```
+
+### Analysis
+- With this scatterplot, I wanted to look at if the people who died from opioid abuse with lower income were living in areas with higher unemployment rates. This seems to be the case as a majority of the points with low income are concentrated near areas with unemployment rates higher than the national average. With unemployment rates in these areas being higher than average, this leads to an easier flow of drugs in these areas as drug dealers are more likely to distribute opioids, like heroin in these areas. Also, with high unemployment, more people can succumb to prescription opioid abuse. This trend is similar to what was shown in the histogram, and is also in line with the argument in the article. 
+
+
+## States{.tabset}
+### Barplot of Deaths per State
+```{r}
+ggplot(data, aes(x=State))+
+  geom_bar(fill = 'green')+
+  labs(title='Opioid Deaths per State', x='State', y='Count')+theme(plot.title=element_text(hjust=0.5), axis.text.x = element_text(angle=90, hjust=1, vjust=0.3))
+```
+
+### Analysis
+- The bar plot displays the amount of people who died from opioids per state. We can see that again the opioid epidemic is 
+disproportionately affecting parts of the population more than the others. In this graph specifically, we can see that states like NC, FL, CA, NY, OH, and PA have significantly higher opioid deaths than others. In these states specifically, homelessness rates are higher as well as unemployment rates, so in theory it makes sense that these states would have higher rates of opioid deaths. In addition, these areas are very populous which makes the transmission of heroin and prescription drugs much easier. Again, this plot adheres to what the article is saying. 
+
+# Conclusion and Next Steps
+- After analysis, I can say that this data very accurately supports the arguments made in the article. From all the plots shown, it seems that the opioid epidemic impacts lower income individuals in areas with high unemployment, in very populous states. This supports the article's statement that the opioid epidemic is disproportionately impacting certain areas of the country. 
+
+- With this in mind, there are some next steps that could be implemented. One, with the focus on these more impacted areas, establishing more rehab facilities and outreach systems would be of great use to the people who are struggling with opioid addiction and are struggling to find a place to battle their addiction. It has been proven that this is a much better way to combat addiction, as opposed to incarcerating these people and not giving them any resources for help. Another step that could be taken is to take the fight to the big pharma companies. These companies have been a major player in feeding people's drug addiction, and the fact that they are profiting from it is absurd and needs to be stopped. 
